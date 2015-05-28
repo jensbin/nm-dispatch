@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+#
+#
+
+IF=$1
+STATUS=$2
+PHYDEV="no"
+
+# determine if the changed NIC is physical
+if [ -d /sys/class/net/$IF/device ]; then
+  PHYDEV="yes"
+fi
+
+# add a lock
+LOCKFILE="/tmp/.${USER}-$(basename $0).lock"
+[[ -r $LOCKFILE ]] && PROCESS=$(cat $LOCKFILE) || PROCESS=" "
+
+if (ps -p $PROCESS) >/dev/null 2>&1
+then
+  echo "$(basename $0) process is already running"
+  exit 1
+else
+  rm -f $LOCKFILE
+  echo $$ > $LOCKFILE
+fi
+
+if [ "$PHYDEV" = "yes" ] && [ "$STATUS" = "up" ]; then
+
+  timezone_last="Etc/UTC"
+  [[ -f /etc/timezone ]] && timezone_last=$(cat /etc/timezone)
+
+  # get the timezone from telize geoip service
+  connected_timezone=$(curl -s http://www.telize.com/geoip | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["timezone"]')
+
+  timezone=${connected_timezone:-$timezone_last}
+
+  if [ -n "${timezone}" ]; then
+    _AREA="$(echo "${timezone}" | cut -f1 -d '/')"
+    _ZONE="$(echo "${timezone}" | cut -f2 -d '/')"
+  else
+    _AREA="Etc"
+    _ZONE="UTC"
+  fi
+
+  # if the timezone files are available create a new localtime
+  if [ -f "/usr/share/zoneinfo/${_AREA}/${_ZONE}" ]; then
+    rm -f /etc/localtime
+    ln -s "/usr/share/zoneinfo/${_AREA}/${_ZONE}" /etc/localtime
+    echo "$_AREA/$_ZONE" > /etc/timezone
+  fi
+
+fi
