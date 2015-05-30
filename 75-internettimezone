@@ -30,7 +30,9 @@ if [ "$PHYDEV" = "yes" ] && [ "$STATUS" = "up" ]; then
   [[ -f /etc/timezone ]] && timezone_last=$(cat /etc/timezone)
 
   # get the timezone from telize geoip service
-  connected_timezone=$(curl -s http://www.telize.com/geoip | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["timezone"]')
+  #connected_timezone=$(curl -s http://www.telize.com/geoip | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["timezone"]')
+  # get the timezone from freegeoip service
+  connected_timezone=$(curl -s https://freegeoip.net/json/ | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["time_zone"]')
 
   timezone=${connected_timezone:-$timezone_last}
 
