@@ -6,6 +6,9 @@ IF=$1
 STATUS=$2
 PHYDEV="no"
 
+[[ "$STATUS" != "up" ]] && exit 0
+sleep 10
+
 # determine if the changed NIC is physical
 if [ -d /sys/class/net/$IF/device ]; then
   PHYDEV="yes"
@@ -32,7 +35,8 @@ if [ "$PHYDEV" = "yes" ] && [ "$STATUS" = "up" ]; then
   # get the timezone from telize geoip service
   #connected_timezone=$(curl -s http://www.telize.com/geoip | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["timezone"]')
   # get the timezone from freegeoip service
-  connected_timezone=$(curl -s https://freegeoip.net/json/ | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["time_zone"]')
+  #connected_timezone=$(curl -s https://freegeoip.net/json/ | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["time_zone"]')
+  connected_timezone=$(curl -s http://ip-api.com/json/ | python -c 'import json,sys;obj=json.load(sys.stdin);print obj["timezone"]')
 
   timezone=${connected_timezone:-$timezone_last}
 
